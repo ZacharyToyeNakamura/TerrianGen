@@ -6,7 +6,7 @@ CC = g++
 hello:
 	echo "Hello, World"
 
-build:
+build: 
 	g++ $(fileName) -o out.exe
 	.\out.exe
 
@@ -25,5 +25,9 @@ testmain:
 	$(CC) -c main_sfml.cpp -I src/include -DSFML_STATIC
 	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32
 	.\main_sfml
+
+main:
+	$(CC) main.cpp -o out.exe
+	.\out.exe
 
 clean:
