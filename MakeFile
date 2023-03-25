@@ -1,2 +1,29 @@
-all: 
-	g++ -I src/include -L src/lib -o main test.cpp -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
+# Note: name of the make file must have no spaces and be in lowercase exactly 'makefile'
+
+# CFLAGS = -I src/include -L src/lib -o main test.cpp -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -Wall -fsanitize=undefined
+CC = g++
+
+hello:
+	echo "Hello, World"
+
+build:
+	g++ $(fileName) -o out.exe
+	.\out.exe
+
+cube:
+	$(CC) -c test_sfml.cpp -I src/include -DSFML_STATIC
+	$(CC) test_sfml.o -o test_sfml -L src/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
+	test_sfml
+
+
+smain:
+	$(CC) -c main_sfml.cpp -I src/include -DSFML_STATIC
+	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
+	.\main_sfml
+
+testmain:
+	$(CC) -c main_sfml.cpp -I src/include -DSFML_STATIC
+	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32
+	.\main_sfml
+
+clean:
