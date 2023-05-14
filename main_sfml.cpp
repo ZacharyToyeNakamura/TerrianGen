@@ -286,3 +286,4 @@ int population_spread(int world_map[MAPROWS][MAPCOLUMNS],int population_map[MAPR
 
     return 0;
 }
+
