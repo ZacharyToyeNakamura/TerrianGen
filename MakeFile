@@ -30,4 +30,8 @@ main:
 	$(CC) main.cpp -o out.exe
 	.\out.exe
 
+practice3:
+	$(CC) practice3.cpp -o practice3.exe
+	.\practice3.exe
+
 clean:
