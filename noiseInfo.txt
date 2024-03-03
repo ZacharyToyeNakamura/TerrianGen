@@ -1,0 +1,9 @@
+BIOME INFO
+ - 0 is not known yet
+ - 1 is peaks   (>0.97)
+ - 2 is land    (>0.525)
+ - 3 is beaches (>0.475)
+ - 4 is lakes   Less than 100 tiles part of it
+ - 5 is oceans  More than 100 tiles part of it
+ - 6 is rivers
+!!!BASED ON WORLDLY GEN!!!

@@ -21,17 +21,23 @@ smain:
 	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
 	.\main_sfml
 
+# The true main
 testmain:
-	$(CC) -c main_sfml.cpp -I src/include -DSFML_STATIC
-	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32
+	$(CC) -c main_sfml.cpp -I src/include -DSFML_STATIC -static 
+	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
 	.\main_sfml
 
-main:
+fakemain:
 	$(CC) main.cpp -o out.exe
 	.\out.exe
 
 practice3:
 	$(CC) practice3.cpp -o practice3.exe
 	.\practice3.exe
+
+noise:
+	$(CC) -c noise.cpp -I src/include -DSFML_STATIC -static 
+	$(CC) noise.o -o noise -L src/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
+	.\noise
 
 clean:
