@@ -1,0 +1,8 @@
+This project is still in progress.
+
+noise.cpp is my attempt at some simple terrian generation without perlin noise.
+main_sfml.cpp is a old attempt at simulating a population.
+I hope to one day combine the 2 into 1 project.
+
+Terrian is currently generated using the sum of 2d sinusoidal functions that are rotated.
+Rivers are being generated using A* with heuristics for height change, distance travelled and distance to the end.
