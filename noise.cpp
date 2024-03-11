@@ -695,14 +695,14 @@ struct box {
      * Draws the box onto the screen
      * @param window The GUI
     */
-    void draw(sf::RenderWindow window) {
+    void drawToScreen(sf::RenderWindow &window) {
         sf::RectangleShape rect(sf::Vector2f(x2-x1, y2-y1));
         rect.setPosition(x1, y1);
         rect.setFillColor(color);
         window.draw(rect);
 
     }
-}
+};
 
 
 int main() {
@@ -794,7 +794,7 @@ int main() {
     // Configure the viewport (the same size as the window)
     glViewport(0, 0, window.getSize().x, window.getSize().y);
 
-    box boxTest = (box){WINDOW_SIZE_X + 100, 0, WINDOW_SIZE_X + 150, WINDOW_SIZE_Y/2, };
+    box boxTest = (box){WINDOW_SIZE_X, 0, WINDOW_SIZE_X + 150, WINDOW_SIZE_Y/2, sf::Color(255,0,0)};
 
     // Declaring the square that is used to draw the pixels
     sf::RectangleShape square(sf::Vector2f(100, 100)); // sets (x, y)
@@ -849,6 +849,7 @@ int main() {
                 window.draw(square);
             }
         }
+        boxTest.drawToScreen(window);
 
         // end the current frame
         window.display();
