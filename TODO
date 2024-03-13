@@ -1,0 +1,9 @@
+Todo:
+Add ability to alter the constants temporarly for debugging
+Add more comments.
+Properly set up SFML and remove the whole library.
+Update README.md.
+Make text not overflow boxes using sf::Text::getGlobalBounds to check if it's within the box, otherwise shrinking the font and checking again.
+Use .hpp files, and include them instead of the .cpp files.
+Use OOP structure.
+    - Add a text box class

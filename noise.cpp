@@ -12,48 +12,22 @@
 #include <ctime>
 #include <cmath>
 #include <queue>
+#include <string.h>
 
-#include "constants.cpp"
+// #include "constants.cpp"
+#include "utilFunctions.cpp"
+#include "FText.cpp"
+#include "BoxGroup.cpp"
 
 using namespace std;
 
 #define ll long long
-
-const int PEAK_NUMBER = 1;
-const int LAND_NUMBER = 2;
-const int BEACH_NUMBER = 3;
-const int LAKE_NUMBER = 4;
-const int OCEAN_NUMBER = 5;
-
-const double WATER_LEVEL = 0.475; // Inclusively
-const double SAND_MAX_HEIGHT = 0.525; // sand is between (0.475, 0.525]
-const double LAND_MAX_HEIGHT = 0.97; // sand is between (0.525, 0.97]
-const double PEAK_MAX_HEIGHT = 1; // sand is between (0.97, 1]
 
 // map(x, y) = (k)sin(a(x - b)) + (k)sin(a(y - b)) + c
 // K is it's influence / stretch
 // b is shift l/r
 // c is shift up down
 
-const int MN = (int)1e4;
-const int COUNT = 100; // higher -> more detail but longer gen times
-const int aBound = 1000; // a value should remain closer to 0
-const int bBound = 1000; // mid - high for variability (shift horizontally)
-const int kBound = 1000; // should remain high for variability
-const int cBound = 1000; // mid - high for variablity (shift vertically)
-const int midX = 0, midY = 0; // doesn't matter except for showing off 1 wave
-
-
-const int movement_options[8][2] = {    {-1, -1}, {-1, 0}, {-1, 1},
-                                        { 0, -1},          { 0, 1},
-                                        { 1, -1}, { 1, 0}, { 1, 1},}; // They can move in any of the 8 directions
-const int RIVER_MOVEMENT[4][2] = {{1,0},{-1,0},{0,1},{0,-1}}; // Only the 4 cardinal directions.
-
-
-const double stepSizeX = 2;
-const double stepSizeY = 2;
-const int SIZEX = (int)(WINDOW_SIZE_X / stepSizeX);
-const int SIZEY = (int)(WINDOW_SIZE_Y / stepSizeY);
 
 // const double stepper = 0.00018; // How scaled it is.
 // const double stepper = 0.0003; // How scaled it is.
@@ -67,44 +41,6 @@ double rotation[COUNT]; // testing
 double graph[MN][MN];
 int biome[MN][MN], river[MN][MN];
 
-
-/**
- * Returns if num1 is closer to zero than num2
- * 
- * @param num1 A number to be compared
- * @param num2 A second number to be compared
- * @return true if num1 is closer to zero than num2, otherwise false.
-*/
-bool closerToZero(double num1, double num2) {
-    return abs(num1) < abs(num2);
-}
-
-/**
- * Generates a random double between lowerLim and upperLim
- * @param upperLim The upper limit for the random double
- * @param lowerLim The lower limit for the random double
- * @return A random double.
- * 
- * TODO: Change the constant that divides it to a prime that is > 1e9
-*/
-double randDouble(double lowerLim, double upperLim) {
-    // The % number and / number must be the same for best results.
-    // Can't be 1e5 because it just breaks probably due to not enough space (no long long)
-    // If there is a way change to ~1e9 or smt (long long didn't work)
-    return lowerLim + ((upperLim - lowerLim) * (rand() % 19354)) / 19354.0; // All brackets are necessary
-}
-
-
-/**
- * Generates a random int between lowerLim and upperLim
- * @param upperLim The upper limit for the random int
- * @param lowerLim The lower limit for the random int
- * @return A random int because the 2 limits, or 0 if the lower lim is greater than the upper limit
-*/
-double randInt(int lowerLim, int upperLim) {
-    if(lowerLim > upperLim) return 0;
-    return lowerLim + (rand() % (upperLim - lowerLim)); 
-}
 
 /**
  * Takes in a num and returns a color, always a shade of white/gray/black.
@@ -167,51 +103,7 @@ sf::Color biomeColoring(int x, int y) {
     return sf::Color(0, 0, 0); // black
 }
 
-/**
- * Checks if a value n is inside of an interval
- * 
- * @return if n is between lowerBound and upperBound (Note that it's inclusive).
-*/
-bool inRange(int n, int lowerBound, int upperBound) {
-    return lowerBound <= n && n <= upperBound;
-}
 
-/**
- * Checks if a coordinate is within certain bounds.
- * 
- * @param x, y A coordinate to check if it's between [0, 0] and (limitX and limitY).
- * @param limitX, limitY The maximum value exclusively x and y can be.
- * @return true if x or y are out of bounds 0 <= x < maxX && 0 <= y < maxY
-*/
-bool outOfBounds(int x, int y, int limitX, int limitY) {
-    return 0 > x || x >= limitX || 0 > y || y >= limitY;
-}
-
-/**
- * Calculates the euclidean distances between 2 sets of coordinates
- * 
- * @param x1, y1 One set of coordinates
- * @param x2, y2 A second set of coordinates
- * @return The euclidean distance between (x1, y1) and (x2, y2)
-*/
-double getDist(double x1, double y1, double x2, double y2) {
-    return sqrt(pow(x1-x2,2)+pow(y1-y2,2));
-}
-
-
-/**
- * Given a value x, and an upper and lower bound. It returns a value that is between the lower and upper
- * bounds.
- * 
- * @param x The value being checked
- * @param lowerBound The lowest value x can be
- * @param upperBound The maximum value x can be
- * 
- * @returns lowerBound if x is less than lowerBound, upperBound if x is greater than upperBound, otherwise x
-*/
-int keepInBounds(int x, int lowerBound, int upperBound) {
-    return min(max(x, lowerBound), upperBound);
-}
 
 
 /**
@@ -236,11 +128,11 @@ int defineBodyOfWater(int startX, int startY, double maxHeight, int visited[MN][
     while(!pq.empty()) {
         auto [currentX, currentY] = pq.top();
         pq.pop();
-        for(auto change: movement_options) {
+        for(auto change: MOVEMENT_OPTIONS) {
             int nextX = change[0] + currentX;
             int nextY = change[1] + currentY;
             // If it's out of bounds continue
-            if(outOfBounds(nextX, nextY, ((int)SIZEX), ((int)WINDOW_SIZE_Y / stepSizeY))) continue;
+            if(outOfBounds(nextX, nextY, ((int)SIZEX), ((int)WINDOW_SIZE_Y / STEP_SIZE_Y))) continue;
             if(inRange(visited[nextX][nextY], 1, 5) || visited[nextX][nextY] == DEFINE_WATER) continue; // if it's already define or is going to be defined as part of the water don't check
             if(graph[nextX][nextY] > maxHeight) continue; // if it exceeds the max height allowed for water.
             waterSize++;
@@ -328,7 +220,7 @@ pair<int, int> closeLocMin(int x, int y, int range, int SIZEX, int SIZEY, double
         for(int j = 0; j < SIZEY; j++) {
             if(graph[i][j] > maximumMin) continue;
             bool isLocalMin = true;
-            for(auto[cx, cy]: RIVER_MOVEMENT) { // 4 directional movement
+            for(auto[cx, cy]: CARDINAL_DIRECTIONS) { // 4 directional movement
                 if(outOfBounds(i + cx, j + cy, SIZEX, SIZEY)) continue;
                 if(graph[i][j] >= graph[i + cx][j + cy]) isLocalMin = false;
             }
@@ -368,7 +260,7 @@ pair<int, int> closeLocMax(int x, int y, int range, int SIZEX, int SIZEY, double
         for(int j = 0; j < SIZEY; j++) {
             bool isLocalMax = true;
             if(graph[i][j] < minimumMax) continue;
-            for(auto[cx, cy]: RIVER_MOVEMENT) { // 4 directional movement
+            for(auto[cx, cy]: CARDINAL_DIRECTIONS) { // 4 directional movement
                 if(outOfBounds(i + cx, j + cy, SIZEX, SIZEY)) continue;
                 if(graph[i][j] <= graph[i + cx][j + cy]) isLocalMax = false;
             }
@@ -381,13 +273,6 @@ pair<int, int> closeLocMax(int x, int y, int range, int SIZEX, int SIZEY, double
     if(!locMax.size()) return {-1, -1};
     
     return locMax[randInt(0, min(range, (int)locMax.size()))].second;
-}
-
-// Returns (m, b) and gets the line equation y = mx + b
-pair<double, double> getLineEquation(double x, double y, double x2, double y2) {
-    double slope = (x2 - x)/(y2 - y);
-    double yInt = y - slope*x;
-    return {slope, yInt};
 }
 
 
@@ -408,7 +293,7 @@ void createLake(int x, int y) {
         if(lakeSize >= MAX_LAKE_SIZE) break;
         auto [x, y] = qu.front();
         qu.pop();
-        for (auto [changeX, changeY]: movement_options) {
+        for (auto [changeX, changeY]: MOVEMENT_OPTIONS) {
             int x2 = x + changeX, y2 = y + changeY;
             if(outOfBounds(x2, y2, SIZEX, SIZEY)) continue;
             if(!inRange(graph[x2][y2], graph[x][y] - MAX_CHANGE_DECREASE, graph[x][y] + MAX_CHANGE_INCREASE)) continue;
@@ -435,7 +320,7 @@ void stream() {
         river[x][y] = 1;
         double lowest = graph[x][y];
         int lowestX = -INF, lowestY = -INF;
-        for (auto move: movement_options) {
+        for (auto move: MOVEMENT_OPTIONS) {
             int x2 = x + move[0], y2 = y + move[1];
             if(outOfBounds(x2, y2, SIZEX, SIZEY)) continue;
             if(graph[x2][y2] < lowest) {
@@ -485,7 +370,8 @@ struct queueItem {
  * @param startXPos, startYPos The starting coordinates of the river, enter -1, -1 to start at a random high point.
  * @param endXPos, endYPos The ending coordinates of the river, enter -1, -1 to end at the closest low point.
 */
-void stream2(int startXPos, int startYPos, int endXPos, int endYPos) {
+// Debugging
+void stream2(int startXPos, int startYPos, int endXPos, int endYPos, double TRAVELLED_WEIGHT = 0.1, double DIST_WEIGHT = 1, double MAX_HEIGHT_CLIMB = 1) {
     // cout << "Creating River "<< startXPos<< " " << startYPos << " to " << endXPos << " " << endYPos << endl;
     // Log file | LOGGING
     ofstream riverLogs;
@@ -496,9 +382,9 @@ void stream2(int startXPos, int startYPos, int endXPos, int endYPos) {
     // DEBUGGING
     cout << "attempt to make a river " << endl;
     
-    const double TRAVELLED_WEIGHT = 0.1; // The weight value of the distance the path has travelled
-    const double DIST_WEIGHT = 1; // The weight value of the distance to the goal
-    const double MAX_HEIGHT_CLIMB = 1; // The maximum amount the river can go up.
+    // const double TRAVELLED_WEIGHT = 0.1; // The weight value of the distance the path has travelled
+    // const double DIST_WEIGHT = 1; // The weight value of the distance to the goal
+    // const double MAX_HEIGHT_CLIMB = 1; // The maximum amount the river can go up.
 
     bool vis[1000][1000]; // change to a constant/vector and make it a parameter later.
     memset(vis, false, sizeof vis); // Important
@@ -557,7 +443,7 @@ void stream2(int startXPos, int startYPos, int endXPos, int endYPos) {
         if(x == endX && y == endY) break; // ended
         pq.pop();
         
-        for(auto [changeX, changeY]: RIVER_MOVEMENT) {
+        for(auto [changeX, changeY]: CARDINAL_DIRECTIONS) {
             int x2 = changeX + x;
             int y2 = changeY + y;
             if(outOfBounds(x2,y2,SIZEX,SIZEY)) continue;
@@ -591,7 +477,7 @@ void stream2(int startXPos, int startYPos, int endXPos, int endYPos) {
     // if(graph[endX][endY] > WATER_LEVEL) {
         // cout << "Continuing river " << graph[endX][endY] << " at: " << endX << " " << endY << endl;
         // Continuing the river crashes sometimes
-        // stream2(endX, endY, -1, -1);
+        // stream2(endX, endY, -1, -1, TRAVELLED_WEIGHT, DIST_WEIGHT, MAX_HEIGHT_CLIMB);
     // }
     
 }
@@ -600,7 +486,8 @@ void stream2(int startXPos, int startYPos, int endXPos, int endYPos) {
  * 
  * @param startX, startY The starting pos of the river
 */
-void riverHelper(int startX, int startY, int endX, int endY) {
+// Change constants and remove them from params once constants look good
+void riverHelper(int startX, int startY, int endX, int endY, int DIST_PER_BEND = 20, double BEND_NOISE = .3, double TRAVELLED_WEIGHT = 0.1, double DIST_WEIGHT = 1, double MAX_HEIGHT_CLIMB = 1) {
     if (startX <= -1 && startY <= -1) {
         pair<int, int> cords = closeLocMax(0, 0, 1e6, SIZEX, SIZEY, SAND_MAX_HEIGHT); // Gets any local maximum
         startX = cords.first;
@@ -612,11 +499,11 @@ void riverHelper(int startX, int startY, int endX, int endY) {
         endX = cords.first;
         endY = cords.second;
     }
-    const int DIST_PER_BEND = 20; // there will be 1 turn per DIST_PER_BEND distance, floored
-    const double MAX_NOISE = .30; // The amount the river can shift
+    // const int DIST_PER_BEND = 20; // there will be 1 turn per DIST_PER_BEND distance, floored
+    // const double BEND_NOISE = .30; // The amount the river can shift
     double distance = getDist(startX, startY, endX, endY);  // The edulicean distance from start to end
     int numBends = floor(distance / DIST_PER_BEND); // The number of bends in the river
-    int maxNoiseVal = floor(distance * MAX_NOISE); // The max amount the river can shift in any direction.
+    int maxNoiseVal = floor(distance * BEND_NOISE); // The max amount the river can shift in any direction.
     cout << "\nRIVER HELPER (" << startX << ", " << startY << "): " << graph[startX][startY] << " to (" << endX << ", " << endY << "): " << graph[endX][endY] << endl;
 
     auto[slope, intercept] = getLineEquation(startX, startY, endX, endY);
@@ -635,8 +522,8 @@ void riverHelper(int startX, int startY, int endX, int endY) {
         // cout << (percentage * i * startY) << " + " << ((1-(percentage*i)) * endY) << endl;
         // cout << "NEXT " << nextX << ", " << nextY << endl;
 
-        int noiseX = randInt(-DIST_PER_BEND * MAX_NOISE, DIST_PER_BEND * MAX_NOISE);
-        int noiseY = randInt(-DIST_PER_BEND * MAX_NOISE, DIST_PER_BEND * MAX_NOISE);
+        int noiseX = randInt(-DIST_PER_BEND * BEND_NOISE, DIST_PER_BEND * BEND_NOISE);
+        int noiseY = randInt(-DIST_PER_BEND * BEND_NOISE, DIST_PER_BEND * BEND_NOISE);
         nextX = keepInBounds(round(nextX + noiseX), 0, SIZEX);
         nextY = keepInBounds(round(nextY + noiseY), 0, SIZEY);
         cout << "NEXT FINAL " << nextX << ", " << nextY << endl;
@@ -647,7 +534,7 @@ void riverHelper(int startX, int startY, int endX, int endY) {
     for(int i = 1; i < points.size(); i++) {
         auto [x1, y1] = points[i-1];
         auto [x2, y2] = points[i]; 
-        stream2(x1, y1, x2, y2);
+        stream2(x1, y1, x2, y2, TRAVELLED_WEIGHT, DIST_WEIGHT, MAX_HEIGHT_CLIMB);
     }
 }
 
@@ -684,25 +571,9 @@ void defineBiomes(int sizeX, int sizeY) {
 }
 
 
-struct box {
-    int x1;
-    int y1;
-    int x2;
-    int y2;
-    sf::Color color;
+void updDebuggingGroup() {
 
-    /**
-     * Draws the box onto the screen
-     * @param window The GUI
-    */
-    void drawToScreen(sf::RenderWindow &window) {
-        sf::RectangleShape rect(sf::Vector2f(x2-x1, y2-y1));
-        rect.setPosition(x1, y1);
-        rect.setFillColor(color);
-        window.draw(rect);
-
-    }
-};
+}
 
 
 int main() {
@@ -731,13 +602,10 @@ int main() {
         // if(rand() % 2) k[i] = 1.0/k[i]; // randomly inverse k value
         rotation[i] = randDouble(0, 90);
     }
-
-    // std::sort(k, k+COUNT, closerToZero);
     std::sort(k, k+COUNT);
     // Debug: prints all waves
     // for(int i = 0; i < COUNT; i++) cout << k[i]<< "sin("<<a[i]<<"(x -"<<b[i]<<")) + "<< k[i]<< "(sin("<<a[i]<<"(y -"<<b2[i]<<")) + "<<c[i]<<endl;
 
-    
 
 
     double minVal = INF, maxVal = -INF; 
@@ -756,7 +624,6 @@ int main() {
             if(tot > maxVal) maxVal = tot;
         }
     }
-
     
 
     // Normalize numbers from 0 to 1 from now on after getting the range using
@@ -794,7 +661,26 @@ int main() {
     // Configure the viewport (the same size as the window)
     glViewport(0, 0, window.getSize().x, window.getSize().y);
 
-    box boxTest = (box){WINDOW_SIZE_X, 0, WINDOW_SIZE_X + 150, WINDOW_SIZE_Y/2, sf::Color(255,0,0)};
+    Box boxTest(WINDOW_SIZE_X, 0, WINDOW_SIZE_X + 150, WINDOW_SIZE_Y/2, sf::Color(255,0,0), "Testing 123.3462", 10, "arial.ttf");
+    FText textTest(WINDOW_SIZE_X,WINDOW_SIZE_Y/2, "Testing 123.3462", "arial.ttf");
+    
+
+    int DIST_PER_BEND = 20;
+    double BEND_NOISE = 0.3;
+    double TRAVELLED_WEIGHT = 0.1;
+    double DIST_WEIGHT = 1;
+    double MAX_HEIGHT_CLIMB = 1;
+    BoxGroup debuggingGroup(WINDOW_SIZE_X+3, 3, 190, 40);
+    vector<Box> temp = {
+        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "Distance per Bend: " + to_string(DIST_PER_BEND), 10, "arial.ttf"),
+        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "Noise Percentage: " + to_string(BEND_NOISE), 10, "arial.ttf"),
+        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "River Height Weight: " + to_string(TRAVELLED_WEIGHT), 10, "arial.ttf"),
+        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "River Distance Weight: " + to_string(DIST_WEIGHT), 10, "arial.ttf"),
+        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "River Max Height increase: " + to_string(MAX_HEIGHT_CLIMB), 10, "arial.ttf")
+    };
+    for(int i = 0; i < temp.size(); i++) {
+        debuggingGroup.add(&temp[i]);
+    }
 
     // Declaring the square that is used to draw the pixels
     sf::RectangleShape square(sf::Vector2f(100, 100)); // sets (x, y)
@@ -825,22 +711,22 @@ int main() {
             }
             // Adds a button to create rivers
             if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::S)) {
-                stream2(-1,-1, -1, -1);
+                stream2(-1,-1, -1, -1, TRAVELLED_WEIGHT, DIST_WEIGHT, MAX_HEIGHT_CLIMB);
             }
             // Adds a button to create rivers (using river helper)
             if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::R)) {
-                riverHelper(-1,-1, -1, -1);
+                riverHelper(-1,-1, -1, -1, DIST_PER_BEND, BEND_NOISE);
             }
         }
         // Reset the frame
         window.clear();
 
-        square.setSize(sf::Vector2f(stepSizeX, stepSizeY));
-        // cout << (int)(window.getSize().x / stepSizeX) << " " << (int)(window.getSize().y / stepSizeY) <<endl;
+        square.setSize(sf::Vector2f(STEP_SIZE_X, STEP_SIZE_Y));
+        // cout << (int)(window.getSize().x / STEP_SIZE_X) << " " << (int)(window.getSize().y / STEP_SIZE_Y) <<endl;
 
         for(int x = 0; x < SIZEX; x++) {
             for(int y = 0; y < SIZEY; y++) {
-                square.setPosition(sf::Vector2f(x * stepSizeX, y*stepSizeY));
+                square.setPosition(sf::Vector2f(x * STEP_SIZE_X, y*STEP_SIZE_Y));
 
                 if (currentMode == TOPO_MODE) square.setFillColor(worldlyColor(x, y));
                 if (currentMode == BIOME_MODE) square.setFillColor(biomeColoring(x, y));
@@ -849,7 +735,9 @@ int main() {
                 window.draw(square);
             }
         }
-        boxTest.drawToScreen(window);
+        // boxTest.draw(window);
+        // textTest.draw(window);
+        debuggingGroup.draw(window);
 
         // end the current frame
         window.display();

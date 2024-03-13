@@ -1,7 +1,10 @@
-# Note: name of the make file must have no spaces and be in lowercase exactly 'makefile'
+# Flags meaning
+# -g is for debugging
+# -c compiles files but doesn't link them (This is neccessary, Unsure why.)
 
-# CFLAGS = -I src/include -L src/lib -o main test.cpp -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -Wall -fsanitize=undefined
+# CFLAGS = -I libs/include -L libs/lib -o main test.cpp -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -Wall -fsanitize=undefined
 CC = g++
+fileName = noise.cpp
 
 hello:
 	echo "Hello, World"
@@ -11,20 +14,20 @@ build:
 	.\out.exe
 
 cube:
-	$(CC) -c test_sfml.cpp -I src/include -DSFML_STATIC
-	$(CC) test_sfml.o -o test_sfml -L src/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
+	$(CC) -c test_sfml.cpp -I libs/include -DSFML_STATIC
+	$(CC) test_sfml.o -o test_sfml -L libs/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
 	test_sfml
 
 
 smain:
-	$(CC) -c main_sfml.cpp -I src/include -DSFML_STATIC
-	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
+	$(CC) -c main_sfml.cpp -I libs/include -DSFML_STATIC
+	$(CC) main_sfml.o -o main_sfml -L libs/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
 	.\main_sfml
 
 # The true main
 testmain:
-	$(CC) -c main_sfml.cpp -I src/include -DSFML_STATIC -static 
-	$(CC) main_sfml.o -o main_sfml -L src/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
+	$(CC) -c main_sfml.cpp -I libs/include -DSFML_STATIC -static 
+	$(CC) main_sfml.o -o main_sfml -L libs/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
 	.\main_sfml
 
 fakemain:
@@ -36,8 +39,8 @@ practice3:
 	.\practice3.exe
 
 noise:
-	$(CC) -c noise.cpp -I src/include -DSFML_STATIC -static 
-	$(CC) noise.o -o noise -L src/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
+	$(CC) -c noise.cpp -I libs/include -DSFML_STATIC -static 
+	$(CC) noise.o -o noise -L libs/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
 	.\noise
 
 clean:
