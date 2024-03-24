@@ -1,5 +1,8 @@
 Todo:
-Add ability to alter the constants temporarly for debugging
+Stop leaking memeory :)
+Make all classes secure (Don't make variables public).
+Add ability to alter the constants temporarly for debugging.
+Rework box to use sf::Vector2f() instead of x, y and sf::Rectangle() instead of x2, y2 and color.
 Add more comments.
 Properly set up SFML and remove the whole library.
 Update README.md.

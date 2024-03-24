@@ -1,5 +1,4 @@
 #include <SFML/Window.hpp>
-// #include <RenderWindow.hpp>
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
 
@@ -14,14 +13,15 @@
 #include <queue>
 #include <string.h>
 
-// #include "constants.cpp"
-#include "utilFunctions.cpp"
+#include "constants.h"
+#include "utilFunctions.h"
 #include "FText.cpp"
 #include "BoxGroup.cpp"
+#include "RestrictBox.cpp"
+#include "RestrictBoxGroup.cpp"
 
 using namespace std;
 
-#define ll long long
 
 // map(x, y) = (k)sin(a(x - b)) + (k)sin(a(y - b)) + c
 // K is it's influence / stretch
@@ -661,7 +661,7 @@ int main() {
     // Configure the viewport (the same size as the window)
     glViewport(0, 0, window.getSize().x, window.getSize().y);
 
-    Box boxTest(WINDOW_SIZE_X, 0, WINDOW_SIZE_X + 150, WINDOW_SIZE_Y/2, sf::Color(255,0,0), "Testing 123.3462", 10, "arial.ttf");
+    Box boxTest(WINDOW_SIZE_X, 0, WINDOW_SIZE_X + 150, WINDOW_SIZE_Y/2, sf::Color(255,0,0), "Testing: ", "123.3462", 10, "arial.ttf");
     FText textTest(WINDOW_SIZE_X,WINDOW_SIZE_Y/2, "Testing 123.3462", "arial.ttf");
     
 
@@ -670,13 +670,13 @@ int main() {
     double TRAVELLED_WEIGHT = 0.1;
     double DIST_WEIGHT = 1;
     double MAX_HEIGHT_CLIMB = 1;
-    BoxGroup debuggingGroup(WINDOW_SIZE_X+3, 3, 190, 40);
+    BoxGroup debuggingGroup(WINDOW_SIZE_X+3, 3, 200, 40);
     vector<Box> temp = {
-        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "Distance per Bend: " + to_string(DIST_PER_BEND), 10, "arial.ttf"),
-        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "Noise Percentage: " + to_string(BEND_NOISE), 10, "arial.ttf"),
-        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "River Height Weight: " + to_string(TRAVELLED_WEIGHT), 10, "arial.ttf"),
-        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "River Distance Weight: " + to_string(DIST_WEIGHT), 10, "arial.ttf"),
-        Box(0, 0, 0, 0, sf::Color(240, 231, 230), "River Max Height increase: " + to_string(MAX_HEIGHT_CLIMB), 10, "arial.ttf")
+        Box(sf::Color(240, 231, 230), "Distance per Bend: ", to_string(DIST_PER_BEND), 10, "arial.ttf"),
+        Box(sf::Color(240, 231, 230), "Noise Percentage: ",  to_string(BEND_NOISE), 10, "arial.ttf"),
+        Box(sf::Color(240, 231, 230), "River Height Weight: ",  to_string(TRAVELLED_WEIGHT), 10, "arial.ttf"),
+        Box(sf::Color(240, 231, 230), "River Distance Weight: ",  to_string(DIST_WEIGHT), 10, "arial.ttf"),
+        Box(sf::Color(240, 231, 230), "River Max Height increase: ", to_string(MAX_HEIGHT_CLIMB), 10, "arial.ttf")
     };
     for(int i = 0; i < temp.size(); i++) {
         debuggingGroup.add(&temp[i]);
@@ -689,33 +689,54 @@ int main() {
     // different viewing modes
     int TOPO_MODE = 0, BIOME_MODE = 1, HEIGHT_MAP_MODE = 2;
     int currentMode = 0, numModes = 3;
+    Box *smtSelected = NULL; // The text box that is currently selected
 
     // Start the loop
     while (window.isOpen()) {
-        sf::Event event; // Process events
+        sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) { // Close window: exit
-                window.close();
+            switch (event.type) {
+                case sf::Event::Closed:
+                    debuggingGroup.destory(); // To not leak memory
+                    window.close();
+                    break;
+
+                case sf::Event::Resized:
+                    glViewport(0, 0, event.size.width, event.size.height);
+                    break;
+
+                case sf::Event::KeyPressed:
+                    if(smtSelected != NULL) break; // if nothing is selected
+                    switch(event.key.code) {
+                        case sf::Keyboard::Escape: // Escape key: exit
+                            debuggingGroup.destory(); // To not leak memory
+                            window.close();
+                            break;
+                        
+                        case sf::Keyboard::V: // Iterate viewing modes
+                            currentMode = (currentMode + 1) % numModes;
+                            break;
+
+                        case sf::Keyboard::S: // DEBUG: Create a stream (just use R)
+                            stream2(-1,-1, -1, -1, TRAVELLED_WEIGHT, DIST_WEIGHT, MAX_HEIGHT_CLIMB);
+                            break;
+
+                        case sf::Keyboard::R: // Create a river
+                            riverHelper(-1,-1, -1, -1, DIST_PER_BEND, BEND_NOISE);
+                            break;
+
+                    }
+                break;
             }
-            // Change view
-            if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Left)) {
-                currentMode = (currentMode + 1) % numModes;
+            // Put all keyboardInput functions here
+            if(event.type == sf::Event::TextEntered) {
+                if(!debuggingGroup.keyboardInput(event)) smtSelected = NULL;
+                // boxTest.keyboardInput(event);
             }
-            // Escape key: exit
-            if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Escape)) {
-                window.close();
-            }
-            // Resize event: adjust the viewport
-            if (event.type == sf::Event::Resized) {
-                glViewport(0, 0, event.size.width, event.size.height);
-            }
-            // Adds a button to create rivers
-            if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::S)) {
-                stream2(-1,-1, -1, -1, TRAVELLED_WEIGHT, DIST_WEIGHT, MAX_HEIGHT_CLIMB);
-            }
-            // Adds a button to create rivers (using river helper)
-            if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::R)) {
-                riverHelper(-1,-1, -1, -1, DIST_PER_BEND, BEND_NOISE);
+            // Put all selected functions here 
+            if(sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                smtSelected = debuggingGroup.clickedScan(sf::Mouse::getPosition(window));
+                // boxTest.clickedScan(sf::Mouse::getPosition(window));
             }
         }
         // Reset the frame
@@ -735,9 +756,9 @@ int main() {
                 window.draw(square);
             }
         }
-        // boxTest.draw(window);
         // textTest.draw(window);
         debuggingGroup.draw(window);
+        // boxTest.draw(window);
 
         // end the current frame
         window.display();

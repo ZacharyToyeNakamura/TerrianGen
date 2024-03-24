@@ -24,7 +24,7 @@ smain:
 	$(CC) main_sfml.o -o main_sfml -L libs/lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lwinmm -lgdi32
 	.\main_sfml
 
-# The true main
+# The true main (for a very bad population sim)
 testmain:
 	$(CC) -c main_sfml.cpp -I libs/include -DSFML_STATIC -static 
 	$(CC) main_sfml.o -o main_sfml -L libs/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
@@ -38,9 +38,17 @@ practice3:
 	$(CC) practice3.cpp -o practice3.exe
 	.\practice3.exe
 
+# Terrian gen
 noise:
 	$(CC) -c noise.cpp -I libs/include -DSFML_STATIC -static 
 	$(CC) noise.o -o noise -L libs/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
 	.\noise
 
+# Testing window
+test:
+	$(CC) -c testingGUI.cpp -I libs/include -DSFML_STATIC -static 
+	$(CC) testingGUI.o -o test -L libs/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
+	.\test
+
 clean:
+	rm *.o
