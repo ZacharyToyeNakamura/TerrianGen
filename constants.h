@@ -50,8 +50,8 @@ const int MOVEMENT_OPTIONS[8][2] = {    {-1, -1}, {-1, 0}, {-1, 1},
 const int CARDINAL_DIRECTIONS[4][2] = {{1,0},{-1,0},{0,1},{0,-1}}; // Only the 4 cardinal directions.
 
 
-const double STEP_SIZE_X = 2; // There are window_size_x / step_size_x pixels in the x directions
-const double STEP_SIZE_Y = 2; //
+const double STEP_SIZE_X = 2; // There are window_size_x / step_size_x cells in the x directions
+const double STEP_SIZE_Y = 2; // how many pixels each cell takes up
 const int SIZEX = (int)(WINDOW_SIZE_X / STEP_SIZE_X);
 const int SIZEY = (int)(WINDOW_SIZE_Y / STEP_SIZE_Y);
 

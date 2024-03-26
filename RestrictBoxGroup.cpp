@@ -2,7 +2,10 @@
 #ifndef RESTRICTBOXGROUP_CPP
 #define RESTRICTBOXGROUP_CPP
 
+#include <string>
+
 #include "RestrictBox.cpp"
+#include "constants.h"
 
 class RestrictBoxGroup {
     private:
@@ -31,8 +34,23 @@ class RestrictBoxGroup {
                 cout << boxes[i]->x1 << " " << boxes[i]->y1 << ", " << boxes[i]->x2 << " " << boxes[i]->y2 << endl;
             }
         }
+        string getText(int idx) {
+            if(idx < 0 || idx >= boxes.size()) return to_string(INF);
+            return boxes[idx]->oldText;
+        }
 
-        // int getSize() {return boxes.size();}
+        // Returns the text from box [idx] as a double, INF means invalid or not a int
+        double getTextAsDouble(int idx) {
+            if(idx < 0 || idx >= boxes.size()) return INF;
+            try {
+                return stod(boxes[idx]->oldText);
+            }
+            catch(exception e) {
+                return INF;
+            }
+
+        }
+        int getSize() {return boxes.size();}
         
         /**
          * Adds a box below the last box
@@ -89,12 +107,13 @@ class RestrictBoxGroup {
 
 
         // Destorys the box group
+        // Since I didn't allocate memory for the pointers myself, there is no need to delete them. 
+        // I think. . . 
         void destory() {
-            for(RestrictBox *box: boxes) {
-                box->destory(); // Make the box delete all it's pointers
-                delete box; // Delete the pointer
-            }
-            boxes.clear(); // just to be sure clear the vector.
+            // for(RestrictBox* box: boxes) {
+            //     delete box;
+            // }
+            // boxes.clear(); // just to be sure clear the vector.
         }
 };
 

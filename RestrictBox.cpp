@@ -74,10 +74,8 @@ class RestrictBox: public Box {
                         return 4;
                     }
                 }
-                else {
-                    setSelected(false);
-                    return 0;
-                }
+                setSelected(false);
+                return 0;
             }
             else if(unicodeInput == ESCAPE) {
                 cancelSelect();

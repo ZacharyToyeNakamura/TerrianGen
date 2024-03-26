@@ -1,6 +1,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -488,6 +489,12 @@ void stream2(int startXPos, int startYPos, int endXPos, int endYPos, double TRAV
 */
 // Change constants and remove them from params once constants look good
 void riverHelper(int startX, int startY, int endX, int endY, int DIST_PER_BEND = 20, double BEND_NOISE = .3, double TRAVELLED_WEIGHT = 0.1, double DIST_WEIGHT = 1, double MAX_HEIGHT_CLIMB = 1) {
+    ofstream rhLogs; // River Helper Logs
+    rhLogs.open("riverHelperLogs.txt");
+    rhLogs << "Starting up"  << endl;
+    rhLogs << "Input |->  Start: (" << startX << ", " << startY << "): " << graph[startX][startY] << " End: (" << endX << ", " << endY << "): " << graph[endX][endY] << endl;
+    rhLogs << "DIST_PER_BEND: " << DIST_PER_BEND << " BEND_NOISE: " << BEND_NOISE << " TRAVELLED_WEIGHT: " << TRAVELLED_WEIGHT << " DIST_WEIGHT: " << DIST_WEIGHT << " MAX_HEIGHT_CLIMB: " << MAX_HEIGHT_CLIMB << endl;
+    
     if (startX <= -1 && startY <= -1) {
         pair<int, int> cords = closeLocMax(0, 0, 1e6, SIZEX, SIZEY, SAND_MAX_HEIGHT); // Gets any local maximum
         startX = cords.first;
@@ -505,8 +512,9 @@ void riverHelper(int startX, int startY, int endX, int endY, int DIST_PER_BEND =
     int numBends = floor(distance / DIST_PER_BEND); // The number of bends in the river
     int maxNoiseVal = floor(distance * BEND_NOISE); // The max amount the river can shift in any direction.
     cout << "\nRIVER HELPER (" << startX << ", " << startY << "): " << graph[startX][startY] << " to (" << endX << ", " << endY << "): " << graph[endX][endY] << endl;
-
-    auto[slope, intercept] = getLineEquation(startX, startY, endX, endY);
+    rhLogs << "Start: (" << startX << ", " << startY << "): " << graph[startX][startY] << " End: (" << endX << ", " << endY << "): " << graph[endX][endY] << endl;
+    
+    // auto[slope, intercept] = getLineEquation(startX, startY, endX, endY);
     int direction = 1;
     if(startX > endX) direction = -1;
     double percentage = 1 / (double)numBends; // This formula was provided by Backgamemon, implemented by me
@@ -515,21 +523,24 @@ void riverHelper(int startX, int startY, int endX, int endY, int DIST_PER_BEND =
     cout << "NUM BENDS " << numBends << endl;
     points.push_back({endX, endY});
     for(int i = 1; i < numBends; i++) {
+        cout << "attempt " << i << endl;
         double nextX = i * percentage * startX + (1-(percentage * i)) * endX;
         double nextY = i * percentage * startY + (1-(percentage * i)) * endY;
         // DEBUGGING
         // cout << percentage*i << " * " << startY << " + 1-" <<  percentage*i << " *  " << endY << endl;
         // cout << (percentage * i * startY) << " + " << ((1-(percentage*i)) * endY) << endl;
         // cout << "NEXT " << nextX << ", " << nextY << endl;
-
+        cout << "made1 " << i << endl;
         int noiseX = randInt(-DIST_PER_BEND * BEND_NOISE, DIST_PER_BEND * BEND_NOISE);
         int noiseY = randInt(-DIST_PER_BEND * BEND_NOISE, DIST_PER_BEND * BEND_NOISE);
+        cout << "made " << i << endl;
         nextX = keepInBounds(round(nextX + noiseX), 0, SIZEX);
         nextY = keepInBounds(round(nextY + noiseY), 0, SIZEY);
         cout << "NEXT FINAL " << nextX << ", " << nextY << endl;
         points.push_back({nextX, nextY});
     }
     points.push_back({startX, startY});
+    cout << "Streaming " << endl;
 
     for(int i = 1; i < points.size(); i++) {
         auto [x1, y1] = points[i-1];
@@ -570,43 +581,20 @@ void defineBiomes(int sizeX, int sizeY) {
     cout << "Finished defining biomes. " << endl;
 }
 
-
-void updDebuggingGroup() {
-
-}
-
-
-int main() {
-    // Sinusoidal noise gen func start
-
-    cout << "Starting " << endl;
+// Generates noise
+// the double stepper zooms in and out.
+void genNoise(double stepper = 0.0003) {
     srand(time(0));
-
     // Generate random numbers for the sin functions
-    for(int i  = 0; i < COUNT; i++) {
-        // a[i] = rand() % aBound+1;
-        // if(!(rand() % 2)) a[i] = 1.0/a[i]; // randomly inverse a value
+    for(int i  = 0; i < COUNT; i++) { // why not just have k and k2  . . . . .
         a[i] = randDouble(0, 500);
-        // a[i] = 1.0/a[i];
-        // b[i] = rand() % bBound;
-        // if(rand() % 2) b[i] *= -1; // randomly negative b value
-        // b2[i] = rand() % bBound;
-        // if(rand() % 2) b2[i] *= -1; // randomly negative b2 value
-        // c[i] = rand() % cBound;
         b[i] = randDouble(0, 1000); // Only needs to be 0 to 2pi ?
         b2[i] = randDouble(0, 1000); // Only needs to be 0 to 2pi ?
         c[i] = randDouble(0, 1000);
-        // c[i] = randDouble(0, 1);
-        // k[i] = rand() % kBound+1;
         k[i] = randDouble(0, 1000);
-        // if(rand() % 2) k[i] = 1.0/k[i]; // randomly inverse k value
-        rotation[i] = randDouble(0, 90);
+        rotation[i] = randDouble(0, 90); // Should be 0 to 2pi ?
     }
     std::sort(k, k+COUNT);
-    // Debug: prints all waves
-    // for(int i = 0; i < COUNT; i++) cout << k[i]<< "sin("<<a[i]<<"(x -"<<b[i]<<")) + "<< k[i]<< "(sin("<<a[i]<<"(y -"<<b2[i]<<")) + "<<c[i]<<endl;
-
-
 
     double minVal = INF, maxVal = -INF; 
     // Testing a large amount of values (not all) to find the min and max to normalize vales to between 0 and 1
@@ -614,42 +602,41 @@ int main() {
         for(int y = 0; y < SIZEY; y++) {
             double tot = 0;
             for(int i = 0; i < COUNT; i++) {
-                // Previous attempts at getting noise
-                // tot += (k[i] * sin(a[i] * (x - midX - b[i])) + (k[i] * sin(a[i] * (y - midY - b2[i])) + c[i])) / (double)COUNT;
-                // tot += (k[i] * sin(a[i] * (x*stepper - midX - b[i])) + (k[i] * sin(a[i] * (y*stepper - midY - b2[i])) + c[i])) / (double)(i + 1);
-                // graph[x][y] += (k[i] * sin(a[i] * (x - midX - b[i])) + (k[i] * sin(a[i] * (y - midY - b[i])) + c[i]));
                 tot += (k[i]*sin(a[i]*(x*stepper*cos(rotation[i])-y*stepper*sin(rotation[i])-b[i])) + k[i]*sin(a[i]*(x*stepper*sin(rotation[i])+y*stepper*cos(rotation[i])-b2[i]))) / (double)(i + 1);
             }
-            if(tot < minVal) minVal = tot;
-            if(tot > maxVal) maxVal = tot;
+            minVal = min(minVal, tot); // if(tot < minVal) minVal = tot;
+            maxVal = max(maxVal, tot); // if(tot > maxVal) maxVal = tot;
         }
     }
     
-
     // Normalize numbers from 0 to 1 from now on after getting the range using
     // val = (((generated value - minVal)) / (maxVal - minVal))
     for(int x = 0; x < SIZEX; x++) {
         for(int y = 0; y < SIZEY; y++) {
             double tot = 0;
             for(int i = 0; i < COUNT; i++) {
-                // Previous attempts at getting noise
-                // tot += (k[i] * sin(a[i] * (x - midX - b[i])) + (k[i] * sin(a[i] * (y - midY - b2[i])) + c[i])) / (double)COUNT;
-                // tot += (k[i] * sin(a[i] * (x*stepper - midX - b[i])) + (k[i] * sin(a[i] * (y*stepper - midY - b2[i])) + c[i])) / (double)COUNT;
-                // tot += (k[i] * sin(a[i]*(x*stepper - midX - b[i] + a[i]*(y*stepper - midY - b2[i]))) + c[i]) / (double)COUNT;
-                // tot += (k[i] * sin(a[i]*(x*stepper - midX - b[i] + a[i]*(y*stepper - midY - b2[i]))) + c[i]) / (double)(i + 1);
-                
-                // graph[x][y] += (k[i] * sin(a[i] * (x - midX - b[i])) + (k[i] * sin(a[i] * (y - midY - b[i])) + c[i]));
                 tot += (k[i]*sin(a[i]*(x*stepper*cos(rotation[i])-y*stepper*sin(rotation[i])-b[i])) + k[i]*sin(a[i]*(x*stepper*sin(rotation[i])+y*stepper*cos(rotation[i])-b2[i]))) / (double)(i + 1);
             }
-            // tot = abs(tot);
             graph[x][y] = (tot - minVal) / (maxVal - minVal);
         }
     }
+}
 
+// creates a new height map and
+void fullReset(double zoom = 0.0003) {
+    memset(biome, 0, sizeof(biome));
+    memset(river, 0, sizeof(river));
+    genNoise(zoom);
+    defineBiomes(SIZEX, SIZEY);
+}
+
+int main() {
+    // Sinusoidal noise gen func start
+    srand(time(0));
+    cout << "Starting " << endl;
     
 
-    // Biome gen start
-    defineBiomes(SIZEX, SIZEY);
+    fullReset();
 
     const int DEBUG_SIZE = 200;
     // create window
@@ -662,7 +649,6 @@ int main() {
     glViewport(0, 0, window.getSize().x, window.getSize().y);
 
     Box boxTest(WINDOW_SIZE_X, 0, WINDOW_SIZE_X + 150, WINDOW_SIZE_Y/2, sf::Color(255,0,0), "Testing: ", "123.3462", 10, "arial.ttf");
-    FText textTest(WINDOW_SIZE_X,WINDOW_SIZE_Y/2, "Testing 123.3462", "arial.ttf");
     
 
     int DIST_PER_BEND = 20;
@@ -670,13 +656,15 @@ int main() {
     double TRAVELLED_WEIGHT = 0.1;
     double DIST_WEIGHT = 1;
     double MAX_HEIGHT_CLIMB = 1;
-    BoxGroup debuggingGroup(WINDOW_SIZE_X+3, 3, 200, 40);
-    vector<Box> temp = {
-        Box(sf::Color(240, 231, 230), "Distance per Bend: ", to_string(DIST_PER_BEND), 10, "arial.ttf"),
-        Box(sf::Color(240, 231, 230), "Noise Percentage: ",  to_string(BEND_NOISE), 10, "arial.ttf"),
-        Box(sf::Color(240, 231, 230), "River Height Weight: ",  to_string(TRAVELLED_WEIGHT), 10, "arial.ttf"),
-        Box(sf::Color(240, 231, 230), "River Distance Weight: ",  to_string(DIST_WEIGHT), 10, "arial.ttf"),
-        Box(sf::Color(240, 231, 230), "River Max Height increase: ", to_string(MAX_HEIGHT_CLIMB), 10, "arial.ttf")
+    double zoom = 0.0003;
+    RestrictBoxGroup debuggingGroup(WINDOW_SIZE_X+3, 3, 200, 40);
+    vector<RestrictBox> temp = {
+        RestrictBox(sf::Color(240, 231, 230), "Distance per Bend: ", to_string(DIST_PER_BEND), 10, "arial.ttf", "int"),
+        RestrictBox(sf::Color(240, 231, 230), "Noise Percentage: ",  to_string(BEND_NOISE), 10, "arial.ttf", "double"),
+        RestrictBox(sf::Color(240, 231, 230), "River Height Weight: ",  to_string(TRAVELLED_WEIGHT), 10, "arial.ttf", "double"),
+        RestrictBox(sf::Color(240, 231, 230), "River Distance Weight: ",  to_string(DIST_WEIGHT), 10, "arial.ttf", "double"),
+        RestrictBox(sf::Color(240, 231, 230), "River Max Height increase: ", to_string(MAX_HEIGHT_CLIMB), 10, "arial.ttf", "double"),
+        RestrictBox(sf::Color(240, 231, 230), "Zoom: ", to_string(zoom), 10, "arial.ttf", "double")
     };
     for(int i = 0; i < temp.size(); i++) {
         debuggingGroup.add(&temp[i]);
@@ -689,17 +677,16 @@ int main() {
     // different viewing modes
     int TOPO_MODE = 0, BIOME_MODE = 1, HEIGHT_MAP_MODE = 2;
     int currentMode = 0, numModes = 3;
-    Box *smtSelected = NULL; // The text box that is currently selected
+    RestrictBox *smtSelected = NULL; // The text box that is currently selected
 
     // Start the loop
     while (window.isOpen()) {
         sf::Event event;
+        bool closing = false;
         while (window.pollEvent(event)) {
             switch (event.type) {
                 case sf::Event::Closed:
-                    debuggingGroup.destory(); // To not leak memory
                     window.close();
-                    break;
 
                 case sf::Event::Resized:
                     glViewport(0, 0, event.size.width, event.size.height);
@@ -709,9 +696,7 @@ int main() {
                     if(smtSelected != NULL) break; // if nothing is selected
                     switch(event.key.code) {
                         case sf::Keyboard::Escape: // Escape key: exit
-                            debuggingGroup.destory(); // To not leak memory
                             window.close();
-                            break;
                         
                         case sf::Keyboard::V: // Iterate viewing modes
                             currentMode = (currentMode + 1) % numModes;
@@ -723,6 +708,9 @@ int main() {
 
                         case sf::Keyboard::R: // Create a river
                             riverHelper(-1,-1, -1, -1, DIST_PER_BEND, BEND_NOISE);
+                            break;
+                        case sf::Keyboard::M: // Create a river
+                            fullReset(zoom);
                             break;
 
                     }
@@ -736,9 +724,16 @@ int main() {
             // Put all selected functions here 
             if(sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                 smtSelected = debuggingGroup.clickedScan(sf::Mouse::getPosition(window));
+                // if(false) { // temp test, change to always true later (no if statement)
+                //     for(auto box: debuggingGroup.boxes) {
+                //         box->isSelected = false;
+                //     }
+                //     smtSelected->
+                // }
                 // boxTest.clickedScan(sf::Mouse::getPosition(window));
             }
         }
+        if(closing) break;
         // Reset the frame
         window.clear();
 
@@ -756,14 +751,23 @@ int main() {
                 window.draw(square);
             }
         }
-        // textTest.draw(window);
         debuggingGroup.draw(window);
         // boxTest.draw(window);
+
+        DIST_PER_BEND = debuggingGroup.getTextAsDouble(0);
+        BEND_NOISE = debuggingGroup.getTextAsDouble(1);
+        TRAVELLED_WEIGHT = debuggingGroup.getTextAsDouble(2);
+        DIST_WEIGHT = debuggingGroup.getTextAsDouble(3);
+        MAX_HEIGHT_CLIMB = debuggingGroup.getTextAsDouble(4);
+        zoom = debuggingGroup.getTextAsDouble(5);
 
         // end the current frame
         window.display();
     }
 
+    temp.clear(); // don't need to clear pointers or anything.
 
-    return 0;
+    cout << "Ended Program." << endl;
+
+    return EXIT_SUCCESS;
 }

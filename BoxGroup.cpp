@@ -94,11 +94,13 @@ class BoxGroup {
 
 
         // Destorys the box group
+        // Since I didn't allocate memory for the pointers myself, there is no need to delete them. 
+        // I think. . . 
         void destory() {
-            for(Box *box: boxes) {
-                box->destory(); // Make the box delete all it's pointers
-                delete box; // Delete the pointer
-            }
+            // for(Box *box: boxes) {
+            //     box->destory(); // Make the box delete all it's pointers
+            //     delete box; // Delete the pointer
+            // }
             boxes.clear(); // just to be sure clear the vector.
         }
 };

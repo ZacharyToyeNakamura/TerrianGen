@@ -49,6 +49,7 @@ double randDouble(double lowerLim, double upperLim) {
 */
 double randInt(int lowerLim, int upperLim) {
     if(lowerLim > upperLim) return 0;
+    if(upperLim - lowerLim == 0) return upperLim;
     return lowerLim + (rand() % (upperLim - lowerLim)); 
 }
 

@@ -1,5 +1,6 @@
 Todo:
-Stop leaking memeory :)
+
+Stop leaking memeory :<
 Make all classes secure (Don't make variables public).
 Add ability to alter the constants temporarly for debugging.
 Rework box to use sf::Vector2f() instead of x, y and sf::Rectangle() instead of x2, y2 and color.
@@ -10,3 +11,6 @@ Make text not overflow boxes using sf::Text::getGlobalBounds to check if it's wi
 Use .hpp files, and include them instead of the .cpp files.
 Use OOP structure.
     - Add a text box class
+Multi-threading to stop "not responding" https://www.sfml-dev.org/tutorials/2.6/system-thread.php
+Name variables and classes better
+Find the derivative of z = Σk*sin(a(x*s*cos(r)-y*s*sin(r)-b)) + k*sin(a(x*s*sin(r) + y*s*cos(r)-b2)) / (i + 1)
