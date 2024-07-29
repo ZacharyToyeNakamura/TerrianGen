@@ -21,6 +21,10 @@
 #include "RestrictBox.cpp"
 #include "RestrictBoxGroup.cpp"
 
+#if defined(_WIN64)
+#pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df'\"")
+#endif
+
 using namespace std;
 
 
@@ -283,10 +287,10 @@ pair<int, int> closeLocMax(int x, int y, int range, int SIZEX, int SIZEY, double
  * @param x, y The starting coordinates of the lake
 */
 void createLake(int x, int y) {
-    const int MAX_LAKE_SIZE = 100;
-    const int MAX_CHANGE_DECREASE = 0.05;
-    const int MAX_CHANGE_INCREASE = 0.01;
-    const int LAKE_SINKAGE = 0.3;
+    const double MAX_LAKE_SIZE = 100;
+    const double MAX_CHANGE_DECREASE = 0.05;
+    const double MAX_CHANGE_INCREASE = 0.01;
+    const double LAKE_SINKAGE = 0.3;
     int lakeSize = 0;
     queue<pair<int, int>> qu;
     qu.push({x, y});
@@ -709,7 +713,7 @@ int main() {
                         case sf::Keyboard::R: // Create a river
                             riverHelper(-1,-1, -1, -1, DIST_PER_BEND, BEND_NOISE);
                             break;
-                        case sf::Keyboard::M: // Create a river
+                        case sf::Keyboard::M: // Resets
                             fullReset(zoom);
                             break;
 

@@ -41,7 +41,7 @@ practice3:
 # Terrian gen
 noise:
 	$(CC) -c noise.cpp -I libs/include -DSFML_STATIC -static 
-	$(CC) noise.o -o noise -L libs/lib -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
+	$(CC) noise.o -o noise -L libs/lib -static-libgcc -static-libstdc++ -static -std=c++17 -lsfml-graphics-d -lsfml-window-s-d -lsfml-system-d -lopengl32 -lwinmm -lgdi32 -static
 	.\noise
 
 # Testing window
